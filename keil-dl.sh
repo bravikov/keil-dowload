@@ -32,15 +32,15 @@
 
     # Информация, запрашиваемая keil.com.
     # В кавычках требуется указать информацию о себе.
-    FIRSTNAME="Dmitry"         # Имя
-    LASTNAME="Bravikov"        # Фамилия
-    EMAIL="bravikov@gmail.com" # Адрес электронной почты
-    COUNTRY_CODE="RU"          # Код страны (RU - для России)
-    POSTAL_CODE="454080"       # Почтовый индекс
-    CITY="Chelyabinsk"         # Город
-    ADDRESS="Vitebskay, 4"     # Адрес
-    COMPANY="Chelenegropribor" # Организация
-    PHONE="+79514767304"       # Номер телефона
+    FIRSTNAME=""      # Имя
+    LASTNAME=""       # Фамилия
+    EMAIL=""          # Адрес электронной почты
+    COUNTRY_CODE="RU" # Код страны (RU - для России)
+    POSTAL_CODE=""    # Почтовый индекс
+    CITY=""           # Город
+    ADDRESS=""        # Адрес
+    COMPANY=""        # Организация
+    PHONE=""          # Номер телефона
 
 ################################################################################
 
