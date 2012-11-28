@@ -118,28 +118,37 @@ TEMP_PAGE="keil-dl-$ARCH-temp.html"
 # Получить страницу с сылкой для скачивания
 wget --no-check-certificate -O $TEMP_PAGE --post-data "$POST_DATA" $URL
 
-# Поиск ссылки на странице 
-URL_EXE=`sed -r 's~.*<div class=dlfile><b><a href="(.*)">.*</a></b>.*</div>.*~\1~g' $TEMP_PAGE`
-FILE=`echo $URL_EXE | sed -r 's~.*/(.*)$~\1~g'`
+if [ "" != "`grep "<div class=dlfile>" $TEMP_PAGE`" ]
+    then
+        # Поиск ссылки на странице
+        URL_EXE=`sed -r 's~.*<div class=dlfile><b><a href="(.*)">.*</a></b>.*</div>.*~\1~g' $TEMP_PAGE`
+        FILE=`echo $URL_EXE | sed -r 's~.*/(.*)$~\1~g'`
+
+        FILE_PATH="$DIR/$ARCH/$FILE"
+
+        # Создать каталог для закачки, если необходимо
+        mkdir -p "$DIR/$ARCH"
+
+        # Скачать установщик
+        wget -c -O "$FILE_PATH" "$URL_EXE"
+
+        # Сделать файл исполняемым
+        chmod u+x "$FILE_PATH"
+
+        if [ $INSTALL == "yes" ]
+            echo -e "Установка $FILE...\n"
+            then wine "$FILE_PATH"
+        fi
+    else
+        echo -e \
+            "\n"\
+            "Не удалось получить корректную страницу с сылкой для скачивания."\
+            "Возможно она недоступна или вы не заполнили переменные с персональной информацией"\
+            "или эта информация некорректна.\n"
+fi
 
 # Удалить временный файл
 rm -f $TEMP_PAGE
-
-FILE_PATH="$DIR/$ARCH/$FILE"
-
-# Создать каталог для закачки, если необходимо
-mkdir -p "$DIR/$ARCH"
-
-# Скачать установщик
-wget -c -O "$FILE_PATH" "$URL_EXE"
-
-# Сделать файл исполняемым     
-chmod u+x "$FILE_PATH"
-
-if [ $INSTALL == "yes" ]
-    echo -e "Установка $FILE...\n"
-    then wine "$FILE_PATH"
-fi
 
 # Вернуться в исходный каталог
 cd "$BACKDIR"
