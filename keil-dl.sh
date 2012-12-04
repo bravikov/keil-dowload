@@ -135,9 +135,10 @@ if [ "" != "`grep "<div class=dlfile>" $TEMP_PAGE`" ]
         # Сделать файл исполняемым
         chmod u+x "$FILE_PATH"
 
-        if [ $INSTALL == "yes" ]
-            echo -e "Установка $FILE...\n"
-            then wine "$FILE_PATH"
+        if [ "$INSTALL" == "yes" ]
+            then
+                echo -e "Установка $FILE...\n"
+                wine "$FILE_PATH"
         fi
     else
         echo -e \
