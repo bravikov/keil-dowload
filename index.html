@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Скачать средства разработки Keil</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script type="text/javascript">
+	   function get_link(product_type)
+		{
+			   document.getElementById("buu").action =
+			      'https://www.keil.com/' + product_type + '/demo/eval/' + product_type + '.htm';
+		}
+	</script>
+</head>
+<body>
+<p><a href="http://www.keil.com/demo/limits.asp">Ограниченные</a> версии средств разработки Keil для микроконтроллеров.</p>
+<p>Получить ссылку:</p>
+	<form id="buu" method="post" accept-charset="utf-8">
+		<input type="hidden" name="firstname"   value="Dmitry">
+		<input type="hidden" name="lastname"    value="Bravikov">
+		<input type="hidden" name="company"     value="xxx">
+		<input type="hidden" name="addr1"       value="xxx">
+		<input type="hidden" name="city"        value="xxx">
+		<input type="hidden" name="zip"         value="xxx">
+		<input type="hidden" name="countrycode" value="RU">
+		<input type="hidden" name="phone"       value="xxx">
+		<input type="hidden" name="email"       value="bravikov@gmail.com">	
+		
+		<input type="submit" name="Submit1" value="MDK-ARM" onclick="get_link('arm')">
+		<input type="submit" name="Submit2" value="C51"     onclick="get_link('c51')">
+		<input type="submit" name="Submit3" value="C251"    onclick="get_link('c251')">
+		<input type="submit" name="Submit4" value="C166"    onclick="get_link('c166')">
+	</form>
+</body>
+</html>
