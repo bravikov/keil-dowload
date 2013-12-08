@@ -4,31 +4,36 @@
 #
 #       Вызов: ./keil-dl.sh [i] {arm|c51|c251|c166}
 #
-#              Опция i указывает скрипту запустить установщик после скачивания.
+#              Необязательная опция i указывает скрипту запустить установщик
+#              после загрузки.
 #
-# Зависимости: wget (обязательно, для скачивания), wine (для установки)
+# Зависимости: html-xml-utils (обязательно, для обработки html-страницы)
+#              wget (обязательно, для скачивания),
+#              wine (не обязательно, для установки)
 #
-#    Описание: скрипт для зарузки и установки последних версий ограниченных
-#              продуктов Keil.
+#    Описание: скрипт для зарузки и установки последних версий бесплатных
+#              средств разработки Keil.
 #
 #              По умолчанию установщик загружается в
 #                   $HOME/Программы/Программирование/Keil
 #
 #              Если в каталоге, уже содержится, загружаемая версия,
 #              то загрузка будет прервана.
+#
+#              Если загрузка была прервана (например комбицией ctrl-c),
+#              то при следующем запуске скрипта загрузка частичто загрузочного
+#              файла возобновится.
 #              
-#              Например, следующая команда загрузит последнюю версию MDK-ARM:
+#              Пример. Следующая команда загрузит последнюю версию MDK-ARM:
 #                   ./keil-dl.sh arm
 #
-#              Загрузку можно прервать комбинацией ctrl+c. Загрузка продолжиться
-#              при следующем вызове скрипта.
 #              Пользователю скрипта необходимо заполнить переменные ниже:
  
 
 ################################################################################
 
-    # Каталог для загрузки установщиков
-    DIR="$HOME/Программы/Программирование/Keil"
+    # Каталог для загрузки
+    DOWNLOAD_DIR="$HOME/Программы/Программирование/Keil"
 
     # Информация, запрашиваемая keil.com.
     # В кавычках требуется указать информацию о себе.
@@ -44,17 +49,16 @@
 
 ################################################################################
 
+# Обработка аргументов командной строки
 
-# Парсинг аргументов командной строки
-
-BED_ARGUMENTS="no"
+BAD_ARGUMENTS="no"
 INSTALL="no"
 ARCH=""
 
 if [ $# == 2 ]
 then
     if [ $1 != "i" ]
-        then BED_ARGUMENTS="yes"
+        then BAD_ARGUMENTS="yes"
         else INSTALL="yes"
     fi
     ARCH=$2
@@ -66,91 +70,49 @@ fi
 
 if [ "$ARCH" != "arm" ] && [ "$ARCH" != "c51" ] && [ "$ARCH" != "c251" ] && [ "$ARCH" != "c166" ]
 
-    then BED_ARGUMENTS="yes"
+    then BAD_ARGUMENTS="yes"
 fi
 
 # Вывести инструкцию по использованию скрипта, если указаны не верные аргументы
-if [ $BED_ARGUMENTS == "yes" ] || [ $# == 0 ] || (($# > 2))
+if [ $BAD_ARGUMENTS == "yes" ] || [ $# == 0 ] || (($# > 2))
 then
-    echo -e \
-        "\n"\
+    echo -e "\n"\
         "Вызов: ./keil-dl.sh [i] {arm|c51|c251|c166}\n\n"\
-        "Опция i указывает скрипту запустить установщик после скачивания.\n\n"\
-        "Например, скачивание последней версии MDK-ARM: ./keil-download.sh arm\n"
+        "Опция i указывает скрипту запустить установщик после загрузки.\n\n"\
+        "Пример загрузки последней версии MDK-ARM: ./keil-download.sh arm\n"
     exit
 fi
 
-# Конецу парсинга аргументов командной строки
+# Конец обработки аргументов командной строки
 
+POST_DATA="\
+firstname=$FIRSTNAME\
+&lastname=$LASTNAME\
+&email=$EMAIL\
+&countrycode=$COUNTRY_CODE\
+&zip=$POSTAL_CODE\
+&city=$CITY\
+&addr1=$ADDRESS\
+&company=$COMPANY\
+&phone=$PHONE"
 
-URL="https://www.keil.com/$ARCH/demo/eval/$ARCH.htm"
+TEMPORARY_PAGE="/tmp/keil-download-$ARCH-tempopary.html"
 
-POST_DATA=""\
-"firstname=$FIRSTNAME"\
-"&"\
-"lastname=$LASTNAME"\
-"&"\
-"email=$EMAIL"\
-"&"\
-"countrycode=$COUNTRY_CODE"\
-"&"\
-"zip=$POSTAL_CODE"\
-"&"\
-"city=$CITY"\
-"&"\
-"addr1=$ADDRESS"\
-"&"\
-"company=$COMPANY"\
-"&"\
-"phone=$PHONE"\
-""
+wget --no-check-certificate -O $TEMPORARY_PAGE --post-data "$POST_DATA" \
+    "https://www.keil.com/$ARCH/demo/eval/$ARCH.htm"
 
-# Запомнить текущий каталог
-BACKDIR=$PWD
+DOWNLOAD_EXE_URL=`hxwls $TEMPORARY_PAGE | grep .exe`
+FILE_NAME=`basename "$DOWNLOAD_EXE_URL"`
 
-# Перейти в каталог скрипта
-ABSOLUTE_FILENAME=`readlink -e "$0"`
-cd "`dirname "$ABSOLUTE_FILENAME"`"
+mkdir -p "$DOWNLOAD_DIR/$ARCH"
+wget -c -P "$DOWNLOAD_DIR/$ARCH" "$DOWNLOAD_EXE_URL"
+chmod u+x "$DOWNLOAD_DIR/$ARCH/$FILE_NAME"
 
-# Временная страница с ссылкой для скачивания
-TEMP_PAGE="keil-dl-$ARCH-temp.html"
-
-# Получить страницу с сылкой для скачивания
-wget --no-check-certificate -O $TEMP_PAGE --post-data "$POST_DATA" $URL
-
-if [ "" != "`grep "<div class=dlfile>" $TEMP_PAGE`" ]
+if [ "$INSTALL" == "yes" ]
     then
-        # Поиск ссылки на странице
-        URL_EXE=`sed -r 's~.*<div class=dlfile><b><a href="(.*)">.*</a></b>.*</div>.*~\1~g' $TEMP_PAGE`
-        FILE=`echo $URL_EXE | sed -r 's~.*/(.*)$~\1~g'`
-
-        FILE_PATH="$DIR/$ARCH/$FILE"
-
-        # Создать каталог для закачки, если необходимо
-        mkdir -p "$DIR/$ARCH"
-
-        # Скачать установщик
-        wget -c -O "$FILE_PATH" "$URL_EXE"
-
-        # Сделать файл исполняемым
-        chmod u+x "$FILE_PATH"
-
-        if [ "$INSTALL" == "yes" ]
-            then
-                echo -e "Установка $FILE...\n"
-                wine "$FILE_PATH"
-        fi
-    else
-        echo -e \
-            "\n"\
-            "Не удалось получить корректную страницу с сылкой для скачивания."\
-            "Возможно она недоступна или вы не заполнили переменные с персональной информацией"\
-            "или эта информация некорректна.\n"
+        echo -e "Установка $FILE_NAME...\n"
+        wine "$DOWNLOAD_DIR/$ARCH/$FILE_NAME"
 fi
 
-# Удалить временный файл
-rm -f $TEMP_PAGE
-
-# Вернуться в исходный каталог
-cd "$BACKDIR"
+rm -f "$TEMPORARY_PAGE"
 
